@@ -11,12 +11,16 @@ struct Args {
     json: bool,
 
     /// 是否开启反转义 (\\n -> \n, \\u -> unicode, \" -> ")
-    #[arg(short, long, default_value_t = false,action = ArgAction::Set)]
+    #[arg(short, long, default_value_t = true,action = ArgAction::Set)]
     unquote: bool,
 
     /// 是否显示行号
     #[arg(short, long,default_value_t = true,action = ArgAction::Set)]
     no: bool,
+
+    /// 是否对文本中部分内容添加颜色（高亮显示）
+    #[arg(short, long,default_value_t = true,action = ArgAction::Set)]
+    highlight: bool,
 }
 
 fn main() {
@@ -40,6 +44,11 @@ fn main() {
                     let num_str = format!("{:04}", line_no);
                     line_no_str = format!("{}{}  ", num_str.cyan(), "|".bright_black());
                 }
+
+                if args.highlight {
+                    output = highlight(&output);
+                }
+
                 let _ = writeln!(io::stdout(), "{} {}", line_no_str, output);
             }
             Err(error) => {
@@ -124,6 +133,29 @@ fn format_json(s: &str) -> String {
     }
 
     result
+}
+
+/// 使用 colored 实现高亮：
+///  1. 文本内容中以 # 开头，或者 trim 后以 # 开头的行，添加绿色
+/// 2. 传入参数 s 包含换行符
+fn highlight(s: &str) -> String {
+    s.lines()
+        .map(|line| {
+            let trimmed = line.trim_start();
+            if trimmed.starts_with('#') {
+                // 统计连续 # 的数量
+                let count = trimmed.chars().take_while(|&c| c == '#').count();
+                if count == 1 {
+                    line.green().to_string()
+                } else {
+                    line.cyan().to_string()
+                }
+            } else {
+                line.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// 将字符串中的  \\n --> \n, \\uxxx -> UTF-8 字符
