@@ -1,0 +1,13 @@
+[package]
+name = "oh-str-unbox"
+version = "0.1.0"
+edition = "2024"
+description = """
+Site: https://github.com/oh-rust/tookit/
+"""
+authors =["hidu"]
+
+[dependencies]
+clap = { version = "4.5.60",default-features = false, features = ["derive","help","std"] }
+colored = "3.1.1"
+simd-json = "0.17.0"
